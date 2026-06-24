@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fact-Check Agent</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            background: #f4f6fb;
+        }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, #0b132b, #1c2541);
+            color: white;
+            padding: 20px;
+        }
+
+        .brand h2 {
+            margin-bottom: 30px;
+        }
+
+        .nav-item {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            background: transparent;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            margin: 8px 0;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+
+        .nav-item:hover,
+        .active {
+            background: #4f46e5;
+        }
+
+        .main {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,.08);
+        }
+
+        .dropzone {
+            margin-top: 25px;
+            border: 3px dashed #4f46e5;
+            padding: 70px;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: .3s;
+        }
+
+        .dropzone:hover {
+            background: #eef2ff;
+        }
+
+        .dropzone h3 {
+            color: #4f46e5;
+            margin-bottom: 10px;
+        }
+
+        .whatwedo {
+            margin-top: 30px;
+        }
+
+        .whatwedo ul {
+            margin-left: 20px;
+            margin-top: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 70px;
+            height: 70px;
+            border: 6px solid #ddd;
+            border-top: 6px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-container {
+            text-align: center;
+            margin-top: 150px;
+        }
+
+        .loading-step {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            padding: 25px;
+            border-radius: 12px;
+            background: white;
+            text-align: center;
+            box-shadow: 0 0 8px rgba(0,0,0,.08);
+        }
+
+        .stat-card h2 {
+            margin-bottom: 10px;
+        }
+
+        .verified { color: green; }
+        .false { color: red; }
+        .inaccurate { color: orange; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: #4f46e5;
+            color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .download-btn {
+            margin: 15px 0;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+
+        <div class="brand">
+            <h2>🛡 Fact-Check Agent</h2>
+            <p>AI Powered Truth Verifier</p>
+        </div>
+
+        <button class="nav-item active">📄 Upload PDF</button>
+        <button class="nav-item">✅ Verification Results</button>
+        <button class="nav-item">🕘 History</button>
+        <button class="nav-item">📊 Analytics</button>
+        <button class="nav-item">⚙ Settings</button>
+        <button class="nav-item">❓ Help & Guide</button>
+
+    </div>
+
+    <div class="main">
+
+        <!-- Upload -->
+
+        <div id="uploadSection" class="card">
+
+            <h1>Automated Fact Checking</h1>
+            <p>Upload PDF and verify claims using AI.</p>
+
+            <div class="dropzone" id="dropzone">
+
+                <h3>Drag & Drop PDF Here</h3>
+
+                <p>OR</p>
+
+                <button class="download-btn">Choose PDF File</button>
+
+                <input type="file" id="fileInput" hidden accept=".pdf">
+
+            </div>
+
+            <div class="whatwedo">
+
+                <h3>What We Do?</h3>
+
+                <ul>
+                    <li>Extract claims from PDF</li>
+                    <li>Search web for facts</li>
+                    <li>Verify accuracy</li>
+                    <li>Generate report</li>
+                </ul>
+
+            </div>
+
+        </div>
+
+
+        <!-- Loading -->
+
+        <div id="loadingSection" class="hidden">
+
+            <div class="loading-container">
+
+                <div class="spinner"></div>
+
+                <div class="loading-step" id="loadingStep">
+                    Extracting text from PDF...
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Results -->
+
+        <div id="resultSection" class="hidden">
+
+            <div class="stats-row">
+
+                <div class="stat-card">
+                    <h2 class="verified">12</h2>
+                    <p>Verified</p>
+                </div>
+
+                <div class="stat-card">
+                    <h2 class="inaccurate">5</h2>
+                    <p>Inaccurate</p>
+                </div>
+
+                <div class="stat-card">
+                    <h2 class="false">3</h2>
+                    <p>False</p>
+                </div>
+
+                <div class="stat-card">
+                    <h2>20</h2>
+                    <p>Total Claims</p>
+                </div>
+
+            </div>
+
+            <button class="download-btn">
+                Download Report CSV
+            </button>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>#</th>
+                        <th>Claim</th>
+                        <th>Status</th>
+                        <th>Correct Information</th>
+                        <th>Source</th>
+                        <th>Confidence</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="resultsBody">
+
+                    <tr>
+                        <td>1</td>
+                        <td>India's capital is Mumbai.</td>
+                        <td class="false">False</td>
+                        <td>Capital is New Delhi.</td>
+                        <td>Wikipedia</td>
+                        <td>98%</td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td>ChatGPT launched in 2022.</td>
+                        <td class="verified">Verified</td>
+                        <td>Correct</td>
+                        <td>OpenAI</td>
+                        <td>99%</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+<script>
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+
+dropzone.addEventListener('click',()=>{
+    fileInput.click();
+});
+
+fileInput.addEventListener('change',function(){
+
+    if(this.files.length>0){
+
+        document.getElementById('uploadSection').classList.add('hidden');
+        document.getElementById('loadingSection').classList.remove('hidden');
+
+        setTimeout(()=>{
+
+            document.getElementById('loadingStep').innerText =
+            "Extracting claims...";
+
+        },2000);
+
+        setTimeout(()=>{
+
+            document.getElementById('loadingStep').innerText =
+            "Verifying claims on web...";
+
+        },4000);
+
+        setTimeout(()=>{
+
+            document.getElementById('loadingSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.remove('hidden');
+
+        },7000);
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
