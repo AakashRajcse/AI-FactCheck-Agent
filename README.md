@@ -57,4 +57,4 @@ The application classifies claims as:
 
 ## 👨‍💻 Author
 
-**Aakash Raj**
+**Aakash Raj
